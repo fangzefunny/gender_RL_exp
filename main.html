@@ -8,7 +8,7 @@
     <script src="jspsych-6.3.1/jspsych.js"></script>
     <script src="jspsych-6.3.1/plugins/jspsych-html-keyboard-response.js"></script>
     <script src="jspsych-6.3.1/plugins/jspsych-image-keyboard-response.js"></script>
-    <script src="jspsych-6.3.1/plugins/jspsych-survey-html-form.js"></script>
+    <script src="jspsych-6.3.1/plugins/jspsych-html-button-response.js"></script>
     <script src="jspsych-6.3.1/plugins/jspsych-fullscreen.js"></script>
     <link href="jspsych-6.3.1/css/jspsych.css" rel="stylesheet" type="text/css"></link>
 
@@ -19,15 +19,17 @@
 
         // Experiment contents: 
         // prac_stage: 
-        prac_repetitions = 1; // repetitions of each image 
+        var prac_repetitions = 1; // repetitions of each image 
         var prac_stim_space = [ 'img/men1.png', 'img/women1.png'] // load the presented stimuli 
         var prac_correct_acts = [ 'j', 'f']
+        var prac_length =  prac_repetitions * prac_correct_acts.length
         // main_stage:
-        main_repetitions = 2; // repetitions of each image 
+        main_repetitions = 1; // repetitions of each image 
         var main_stim_space = [ 'img/men1.png', 'img/women1.png', 'img/men2.png', 'img/women2.png',
                                 'img/men3.png', 'img/women3.png', 'img/men4.png', 'img/women4.png',
                                 'img/men5.png', 'img/women5.png', 'img/men6.png', 'img/women6.png']  
-        var main_correct_acts = [ 'j', 'f', 'j', 'f', 'j', 'f', 'j', 'f', 'j', 'f', 'j', 'f']       
+        var main_correct_acts = [ 'j', 'f', 'j', 'f', 'j', 'f', 'j', 'f', 'j', 'f', 'j', 'f']  
+        var prac_length =  prac_repetitions * prac_correct_acts.length     
 
         // presented time: 
         fixation_dura = 1000; // ms
@@ -35,8 +37,9 @@
         post_feedback_dura = 500
 
         // feedback content 
-        correct_feedback  = '你答对了！+1';
-        incorrect_feedback = '你答错了! +0';
+        correct_feedback  = '<span style="color: Green; font: 35px 微软雅黑">你答对了！+1';
+        incorrect_feedback = '<span style="color: Red; font: 35px 微软雅黑">你答错了! +0';
+        var repeat_prac = true;
        
         // 1. Utility function to faciliate the experiment presentation 
 
@@ -53,25 +56,30 @@
         function prep_material ( repetitions, stim_space, correct_acts) {
             var correct_acts_seq = [];
             var stimuli_seq = [];
+            var t = 0;
+            var trials  = [];
             for (var r = 0; r < repetitions; r++){
                 var mini_block = [];
                 for ( var i = 0; i < stim_space.length; i++){
                     mini_block.push( i)
-                    mini_block = shuffle_array(mini_block)
-                    for ( var j = 0; j < mini_block.length; j++){
-                        stimuli_seq = stimuli_seq.concat( stim_space[ mini_block[j]])
-                        correct_acts_seq = correct_acts_seq.concat( correct_acts[ mini_block[j]])
-                    }
+                }
+                mini_block = shuffle_array(mini_block)
+                for ( var j = 0; j < mini_block.length; j++){
+                    t = t+1;
+                    stimuli_seq.push(stim_space[ mini_block[j]]);
+                    correct_acts_seq.push( correct_acts[ mini_block[j]]);
+                    trials.push( t);
                 }
             }
-            return {stimuli_seq:stimuli_seq, correct_acts_seq:correct_acts_seq}
+            return {stimuli_seq:stimuli_seq, correct_acts_seq:correct_acts_seq, trials:trials}
         };
 
-        function load_stim (stimuli_seq, correct_acts_seq) {
+        function load_stim (stimuli_seq, correct_acts_seq, trials) {
             var time_var = [] 
             for (var i = 0; i < stimuli_seq.length; i++) {
                 time_var.push({pic: stimuli_seq[i],
-                               correct_act: correct_acts_seq[i]});
+                               correct_act: correct_acts_seq[i],
+                               trials: trials[i]})
             };
             return time_var
         }
@@ -88,25 +96,16 @@
 
         // 2.1 Welcome screen 
         var demograph = {
-            data: { screen_id: 'demo'},
-            type: "survey-html-form",
-            preamble: '<p><span style="color: black; font-size: 40px">\
-                        麻烦完成一下的信息录入：</p>',
-            html: "<p>性别(男或女): <input name='Gender' type='text'/></p>",
-            button_label: '继续',
-            on_finish: function (trialdata) {
-                trialdata.response = JSON.parse( trialdata.response);
-                jsPsych.trialdata.addProperties({
-                    gender: trialdata.response.Gender,
-                    age: trialdata.response.age,
-                })
-            }
+            data: { screen_id: 'demograph'},
+            type: 'html-button-response',
+            stimulus: '<p><span style="color: black; font: 35px 微软雅黑">\
+                    麻烦完成一下的信息录入：</p>',
+            choices: ['男', '女'],
         };
-
         var welcome = {
             type: "fullscreen",
             fullscreen_mode: true,
-            message: '<p><span style="color: black; font-size: 40px">\
+            message: '<p><span style="color: black; font: 35px 微软雅黑">\
                         欢迎来到本实验。<br><br>\
                         以下实验需要全屏模式。<br><br>\
                         按键开始实验</p>',
@@ -122,27 +121,30 @@
         // 2.2 General instruction screen
         var instructions = {
             type: "html-keyboard-response",
-            stimulus: '<span style="color: black; font-size: 40px">\
-                        在这个实验中你们将学习使用一组船新的词汇，<br><br>\
-                        这些词汇分别是用来评价男性或者女性的。<br><br>\
-                        在这个实验中，你将为这个词汇填入其描述的主语来完成一个句子。<br><br>\
+            stimulus: '<span style="color: black; font: 35px 微软雅黑">\
+                        在这个实验中你们将学习使用一组船新的词汇，<br>\
+                        这些词汇分别是用来评价男性或者女性的。<br>\
+                        在这个实验中，你将为这个词汇填入其描述的主语来完成一个句子。<br>\
                         看不懂？没关系，按任意按键进入练习阶段。'
         };
 
         // 2.2.1 Practice instruction screen
         var prac_instruct = {
             type: "html-keyboard-response",
-            stimulus: '<span style="color: black; font-size: 40px">\
-                        现在进入练习阶段，<br><br>\
-                        你需要达到正确率80%以上才可以进入主试验，<br><br>\
+            stimulus: '<span style="color: black; font: 35px 微软雅黑">\
+                        现在进入练习阶段，<br>\
+                        你需要达到正确率80%以上才可以进入主试验，<br>\
+                        否则会重新开始练习<br>\
                         按任意按键开始练习。'
         };
 
         var main_instruct = {
             type: "html-keyboard-response",
-            stimulus: '<span style="color: black; font-size: 40px">\
-                        现在进入主实验阶段。从现在开始，<br><br>\
-                        你回答的正确率将直接影响你的实验报酬，<br><br>\
+            stimulus: '<span style="color: black; font: 35px 微软雅黑">\
+                        现在进入主实验阶段。从现在开始 <br>\
+                        你回答的正确率将直接影响你的实验报酬，<br>\
+                        最高奖金100块，当然你不可能获得全部钱，但是你可以获得更多<br>\
+                        在实验结束之后会告知，报酬计算方式，公平，公正，公开。<br>\
                         按任意按键开始赚钱。'
         };
 
@@ -156,7 +158,11 @@
 
         // 2.4 Stimuli screen 
         var stim = {
-            data: { screen_id: 'stim', 'correct_act': jsPsych.timelineVariable("correct_act")},
+            data: { 
+                screen_id: 'stim', 
+                correct_act: jsPsych.timelineVariable("correct_act"),
+                t: jsPsych.timelineVariable("trials")
+            },
             type: "image-keyboard-response",
             stimulus: jsPsych.timelineVariable("pic"),
             choices: ['f', 'j'],
@@ -188,18 +194,55 @@
             post_trial_gap: post_feedback_dura
         }
 
+        var repeat_prac_condition = {
+            timeline: [],
+            conditional_function: function () {
+                var avg_acc = jsPsych.data.get().filter({is_correct: 1}).last(prac_length).count()
+                // take the mean of the function
+                avg_acc = avg_acc / prac_length
+                if (avg_acc < .8) {
+                    repeat_prac = true;
+                    return true;
+                } else {
+                    repeat_prac = false;
+                    return false;
+                }
+            }
+        };
+
+
+        // 2.6 Check the pratice accuracy
+
         // 3. Run the experiment process
 
         // Define the procedure 
         material = prep_material( prac_repetitions, prac_stim_space, prac_correct_acts)
-        time_var = load_stim( material.stimuli_seq, material.correct_acts_seq)
+        prac_time_var = load_stim( material.stimuli_seq, material.correct_acts_seq, material.trials)
         fname = document.location
-        var procedure = {
+        var prac_procedure = {
             timeline: [fixation, stim, feedback],
-            timeline_variables: time_var,
+            timeline_variables: prac_time_var,
         };
 
-        var timeline = [ demograph, welcome, instructions, procedure]
+        material = prep_material( main_repetitions, main_stim_space, main_correct_acts)
+        main_time_var = load_stim( material.stimuli_seq, material.correct_acts_seq, material.trials)
+        var main_procedure = {
+            timeline: [fixation, stim, feedback],
+            timeline_variables: main_time_var,
+        }
+
+        var instructions_prac_loop = {
+            timeline: [prac_instruct, prac_procedure, repeat_prac_condition],
+            loop_function: function () {
+                if (repeat_prac == true) {
+                    return true 
+                } else {
+                    return false 
+                }
+            }
+        };
+
+        var timeline = [ demograph, welcome, instructions, instructions_prac_loop, main_instruct, main_procedure]
         jsPsych.init({
             timeline: timeline,
             on_finish: function () {
