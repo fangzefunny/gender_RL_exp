@@ -1,0 +1,73 @@
+<!DOCTYPE html> 
+<html lang="en">
+<!-- An annoucement of website language, en means english, zh means chinese
+all content within the website should be written in this html tag -->
+<head>
+    <!-- The content in the head tag will not shown to the reader,
+    it is used to save some meta-data, for example, the title of the website  -->
+    <meta charset="utf-8"> 
+    <!-- told the browser how to decode your code.  -->
+    <title>My experiment</title>
+
+    <!-- We also need to load our js pkgs within the head tage
+    The script tag includes a hyper text and src define where we 
+    are retriving the content, not really understand. Revisit the problem
+    later -->
+    <script src="js/jspsych.js"> </script>
+    <script src="js/plugins/jspsych-html-button-response.js"></script>
+    <link href="js/css/jspsych.css" rel="stylesheet" type="text/css">
+
+</head>
+
+<body>
+    <script>
+        // In body, we can start to program our experiment 
+    
+        /*A basic structure of an psychological experiment includes
+            * welcome
+            * instruction
+            * practice
+            * block instruction 
+            * experiment block
+            * some information collection
+    
+            In jsPsych, like in all other psych experiemnt pkg, all panels
+            are under the control of timeline.*/
+
+        /* Welcome screen, we choose the button response module
+        We expect the participant see the screen and press any key if
+        they feel they are prepared*/
+        var welcomeScreen = {
+            /*Call the module, just like nn.Linear, be careful, you need to 
+            import them in the head tag */
+            type: 'html-button-response',  
+            stimulus: 'Welcome to this experiment', // The text to display 
+            choices: ['Click here to continue'], // The button to click on
+            data:{
+                screen_id: "welcome",
+            }, 
+        };
+    
+        /* The meta controller of jsPsych, timeline.
+        We can think of the timeline as the computation graph in
+        tensorflow, where Dominoes are held inside. In tensorflow,
+        the trigger is sess.run() while in jsPsych, it is jsPsych.init().
+        Once yor pull the trigger, the experiment will run automatically 
+        as you expect. */
+        timeline = [];
+        timeline.push(welcomeScreen)
+    
+        /* The trigger of the Dominoes. The input to the init fn is
+        a dictionary. In face the input to almost all jsPsych function
+        is a dictionary. This dictionary shares some identical keys.
+            timeline: the neatly arranged Dominoes
+            on_finish: Deathrattle. It is executed when all Dominoes are overturned. */
+        jsPsych.init({
+            timeline: timeline,
+            on_finish: function(){
+                jsPsych.data.displayData()
+            }
+        })
+    </script>
+</body>
+</html>
