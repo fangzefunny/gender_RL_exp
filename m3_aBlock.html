@@ -21,18 +21,33 @@
     <body>
         <script>
 
-            // -----------------------------
-            //            Welcome    
-            // -----------------------------
+            //-----------------------------
+            //        Stimuli Pool 
+            //-----------------------------
+            /* 
+                Here, we define the stimulus, inlcuding
+                1. stimulus index
+                2. stimulus image
+                3. correct response to the stimulus
+            */
+            var blueTrial = {
+                stimulus: "img/blue.png", 
+                data: {screen_id: "trial", stimId: 0, corAct: 'j'}
+            };
+            var redTrial = {
+                stimulus: "img/Red.png", 
+                data: {screen_id: "trial", stimId: 1, corAct: 'f'}
+            };
+            var stimPool = [blueTrial, redTrial]
+
+            // ---------------------------------
+            //        Welcome & Instruction     
+            // ---------------------------------
             var welcomeScreen = {
                 type: 'html-button-response',
                 stimulus: 'Welcome to our experiment',
                 choices: ['Click here to start'],
             };
-
-            // ------------------------------
-            //         Instruction    
-            // ------------------------------
             var instructScreen = {
                 type: 'instructions',
                 pages: [
@@ -45,14 +60,12 @@
                     "<p>Press the key \"J\" </p></div>",
                     'Let\'s start some pratice first',    
                 ],
-                data:{
-                    screen_id: 'instruct'
-                },
+                data:{screen_id: 'instruct'},
             };
 
-            // ------------------------------
-            //            Trials   
-            // ------------------------------
+            // -------------------------------
+            //          Experiment block    
+            // --------------------------------
             /*Fixation*/ 
             var fixationScreen = {
                 type: "html-keyboard-response",
@@ -103,18 +116,7 @@
             };
             
             /*A Block*/
-            var stimSpace = [
-                {
-                stimulus: "img/blue.png", 
-                data: {screen_id: "blue trial",
-                corAct: 'j'}
-                },
-                {
-                stimulus: "img/Red.png", 
-                data: {screen_id: "red trial",
-                corAct: 'f'}
-                },
-            ]
+            
             var trialTimeline = {
                 timeline: [fixationScreen, responseScreen, feedbackScreen],
                 timeline_variables: stimSpace,
